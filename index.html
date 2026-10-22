@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>دفترچه مطالعه من</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#38bdf8">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{
+    --bg:#0f172a; --card:#1e293b; --accent:#38bdf8; --accent2:#22c55e;
+    --text:#e2e8f0; --muted:#94a3b8; --danger:#ef4444; --line:#334155;
+    --input-bg:#0f172a; --fs:14px;
+  }
+  body.light{
+    --bg:#f1f5f9; --card:#ffffff; --accent:#0284c7; --accent2:#16a34a;
+    --text:#0f172a; --muted:#64748b; --danger:#dc2626; --line:#e2e8f0;
+    --input-bg:#f8fafc;
+  }
+  *{box-sizing:border-box; font-family: Tahoma, "Segoe UI", sans-serif;}
+  body{margin:0; background:var(--bg); color:var(--text); padding:16px;
+       max-width:960px; margin:auto; font-size:var(--fs); transition:background .2s,color .2s;
+       padding-bottom:env(safe-area-inset-bottom);}
+  h1{font-size:20px; text-align:center; margin:8px 0 16px;}
+  h2{font-size:15px; color:var(--accent); margin:0 0 12px;}
+  .card{background:var(--card); border-radius:14px; padding:16px; margin-bottom:14px;
+        box-shadow:0 4px 12px rgba(0,0,0,.15);}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .row > *{flex:1; min-width:120px;}
+  input, select, button, textarea{
+    width:100%; padding:10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--input-bg); color:var(--text); font-size:var(--fs);
+  }
+  button{background:var(--accent); color:#fff; border:none; cursor:pointer;
+         font-weight:bold; transition:.2s;}
+  body:not(.light) button{color:#001;}
+  button:hover{opacity:.9;}
+  button.ghost{background:transparent; color:var(--text); border:1px solid var(--line);}
+  button.danger{background:var(--danger); color:#fff;}
+  button.green{background:var(--accent2); color:#fff;}
+  body:not(.light) button.green{color:#001;}
+  button.small{padding:6px 10px; font-size:12px; flex:none; min-width:auto;}
+  .stats{display:flex; gap:10px; flex-wrap:wrap;}
+  .stat{flex:1; min-width:100px; background:var(--input-bg); padding:12px; border-radius:10px; text-align:center;}
+  .stat b{display:block; font-size:22px; color:var(--accent);}
+  .stat span{font-size:12px; color:var(--muted);}
+  .timer{font-size:48px; text-align:center; font-weight:bold; color:var(--accent);
+         margin:8px 0; font-variant-numeric:tabular-nums;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th, td{padding:8px; text-align:right; border-bottom:1px solid var(--line);}
+  th{color:var(--muted); font-weight:normal;}
+  .bar{height:10px; background:var(--input-bg); border-radius:5px; overflow:hidden; margin-top:8px;}
+  .bar > div{height:100%; background:var(--accent2); transition:width .3s;}
+  .goal-text{font-size:13px; color:var(--muted); margin-top:6px;}
+  .empty{text-align:center; color:var(--muted); padding:20px; font-size:13px;}
+  .subject-chip{display:inline-flex; align-items:center; gap:6px; background:var(--input-bg);
+                border:1px solid var(--line); border-radius:16px; padding:4px 10px; margin:4px; font-size:12px;}
+  .subject-chip .x{cursor:pointer; color:var(--danger); font-weight:bold;}
+  canvas{width:100%; height:220px; display:block;}
+  .calendar{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:10px;}
+  .cal-head{font-size:11px; color:var(--muted); text-align:center; padding:4px 0;}
+  .cal-day{background:var(--input-bg); border-radius:8px; padding:6px 4px; text-align:center;
+           font-size:12px; min-height:56px; border:1px solid transparent; cursor:pointer; transition:.15s;}
+  .cal-day:hover{border-color:var(--accent);}
+  .cal-day.today{border-color:var(--accent2);}
+  .cal-day .num{font-weight:bold;}
+  .cal-day .mins{font-size:10px; color:var(--accent2); margin-top:2px;}
+  .cal-day.empty-day{background:transparent; cursor:default; border:none;}
+  .cal-nav{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .cal-nav b{font-size:14px;}
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+  .toolbar input, .toolbar select{flex:1; min-width:120px;}
+  .err{color:var(--danger); font-size:12px; margin-top:6px;}
+  .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .topbar h1{margin:0; flex:1; text-align:right;}
+  .topbar-btns{display:flex; gap:6px;}
+  .topbar-btns button{width:auto; padding:8px 10px; font-size:16px; min-width:auto; flex:none;}
+  .streak{display:flex; align-items:center; gap:8px; padding:10px 14px;
+          background:linear-gradient(135deg,#f59e0b,#ef4444); border-radius:12px;
+          color:#fff; font-weight:bold; margin-bottom:12px;}
+  .streak .num{font-size:24px;}
+  .tabs{display:flex; gap:4px; margin-bottom:8px;}
+  .tabs button{flex:1; background:var(--input-bg); color:var(--muted);
+               border:1px solid var(--line); padding:6px; font-size:12px;}
+  .tabs button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  body:not(.light) .tabs button.active{color:#001;}
+  .modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.6); display:none;
+            align-items:center; justify-content:center; z-index:100; padding:16px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--card); border-radius:14px; padding:20px; max-width:400px; width:100%;}
+  .modal h3{margin:0 0 14px; font-size:16px; color:var(--accent);}
+  .search-box{width:100%; margin-bottom:10px;}
+  .stat-row{display:flex; justify-content:space-between; padding:6px 0;
+            border-bottom:1px solid var(--line); font-size:13px;}
+  .stat-row:last-child{border:none;}
+  .stat-row b{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📚 دفترچه مطالعه</h1>
+  <div class="topbar-btns">
+    <button class="ghost" onclick="toggleTheme()" id="themeBtn" title="تم">🌙</button>
+    <button class="ghost" onclick="changeFontSize()" title="اندازه فونت">A</button>
+    <button class="ghost" onclick="openStatsModal()" title="آمار پیشرفته">📈</button>
+  </div>
+</div>
+
+<div class="streak" id="streakBox" style="display:none;">
+  <span style="font-size:24px;">🔥</span>
+  <span><span class="num" id="streakNum">0</span> روز متوالی!</span>
+</div>
+
+<!-- آمار -->
+<div class="card">
+  <h2>آمار</h2>
+  <div class="stats">
+    <div class="stat"><b id="statToday">0</b><span>دقیقه امروز</span></div>
+    <div class="stat"><b id="statWeek">0</b><span>این هفته</span></div>
+    <div class="stat"><b id="statTotal">0</b><span>کل دقیقه</span></div>
+    <div class="stat"><b id="statSessions">0</b><span>جلسات</span></div>
+  </div>
+</div>
+
+<!-- اهداف -->
+<div class="card">
+  <h2>🎯 اهداف</h2>
+  <div class="row">
+    <input type="number" id="goalInput" placeholder="هدف روزانه (دقیقه)" min="1">
+    <input type="number" id="weekGoalInput" placeholder="هدف هفتگی (دقیقه)" min="1">
+    <button onclick="saveGoals()">ذخیره</button>
+  </div>
+  <div class="goal-text">روزانه</div>
+  <div class="bar"><div id="goalBar" style="width:0%"></div></div>
+  <div class="goal-text" id="goalText">—</div>
+  <div class="goal-text" style="margin-top:10px;">هفتگی</div>
+  <div class="bar"><div id="weekGoalBar" style="width:0%; background:var(--accent);"></div></div>
+  <div class="goal-text" id="weekGoalText">—</div>
+</div>
+
+<!-- پومودورو -->
+<div class="card">
+  <h2>⏱ پومودورو</h2>
+  <div class="timer" id="timerDisplay">25:00</div>
+  <div class="row">
+    <select id="pomoSubject"></select>
+    <select id="pomoDuration" onchange="setPomoDuration()">
+      <option value="15">۱۵ دقیقه</option>
+      <option value="25" selected>۲۵ دقیقه</option>
+      <option value="50">۵۰ دقیقه</option>
+    </select>
+  </div>
+  <div class="row" style="margin-top:10px;">
+    <button class="green" id="pomoStart" onclick="toggleTimer()">شروع</button>
+    <button class="ghost" onclick="resetTimer()">ریست</button>
+    <button class="ghost" id="notifBtn" onclick="requestNotif()" style="display:none;">🔔 فعال‌سازی اعلان</button>
+  </div>
+</div>
+
+<!-- ثبت دستی -->
+<div class="card">
+  <h2>➕ ثبت جلسه</h2>
+  <div class="row">
+    <select id="subject"></select>
+    <input type="number" id="minutes" placeholder="مدت (دقیقه)" min="1">
+    <input type="text" id="jalaliDateInput" placeholder="1404/08/30" dir="ltr">
+  </div>
+  <div class="row" style="margin-top:10px;">
+    <input type="text" id="note" placeholder="یادداشت (اختیاری)">
+    <button onclick="addSession()">ثبت</button>
+  </div>
+  <div class="err" id="dateErr"></div>
+</div>
+
+<!-- دروس -->
+<div class="card">
+  <h2>📂 دروس</h2>
+  <div class="row">
+    <input type="text" id="newSubject" placeholder="نام درس جدید">
+    <button onclick="addSubject()">افزودن</button>
+  </div>
+  <div id="subjectList" style="margin-top:10px;"></div>
+</div>
+
+<!-- نمودار -->
+<div class="card">
+  <h2>📊 نمودار</h2>
+  <div class="tabs">
+    <button id="tabBar7" class="active" onclick="setChartMode('bar7')">۷ روز</button>
+    <button id="tabBar30" onclick="setChartMode('bar30')">۳۰ روز</button>
+    <button id="tabPie" onclick="setChartMode('pie')">سهم دروس</button>
+  </div>
+  <canvas id="chart"></canvas>
+</div>
+
+<!-- تقویم -->
+<div class="card">
+  <h2>🗓 تقویم شمسی</h2>
+  <div class="cal-nav">
+    <button class="ghost small" onclick="calShift(-1)">ماه قبل</button>
+    <b id="calTitle">—</b>
+    <button class="ghost small" onclick="calShift(1)">ماه بعد</button>
+  </div>
+  <div class="calendar" id="calendarGrid"></div>
+  <div class="goal-text" id="calDetail">روی یک روز کلیک کن.</div>
+</div>
+
+<!-- جلسات -->
+<div class="card">
+  <h2>📋 جلسات</h2>
+  <input type="text" class="search-box" id="searchBox" placeholder="🔍 جستجو در درس/یادداشت...">
+  <div class="toolbar">
+    <select id="filterSubject"><option value="">همه دروس</option></select>
+    <input type="text" id="filterDate" placeholder="فیلتر تاریخ 1404/08" dir="ltr">
+    <select id="sortBy">
+      <option value="date-desc">جدیدترین</option>
+      <option value="date-asc">قدیمی‌ترین</option>
+      <option value="min-desc">بیشترین مدت</option>
+      <option value="min-asc">کمترین مدت</option>
+    </select>
+  </div>
+  <table>
+    <thead><tr><th>تاریخ</th><th>درس</th><th>مدت</th><th>یادداشت</th><th></th></tr></thead>
+    <tbody id="sessionsBody"></tbody>
+  </table>
+  <div id="emptyMsg" class="empty" style="display:none;">جلسه‌ای نیست.</div>
+</div>
+
+<!-- بکاپ -->
+<div class="card">
+  <h2>💾 بکاپ</h2>
+  <div class="row">
+    <button class="ghost" onclick="exportData()">خروجی JSON</button>
+    <button class="ghost" onclick="exportCSV()">خروجی CSV</button>
+    <button class="ghost" onclick="document.getElementById('importFile').click()">ورودی</button>
+    <button class="danger" onclick="clearAll()">پاک کردن</button>
+  </div>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+
+<!-- مودال ویرایش -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h3>ویرایش جلسه</h3>
+    <div class="row"><select id="editSubject"></select></div>
+    <div class="row" style="margin-top:8px;">
+      <input type="number" id="editMinutes" placeholder="دقیقه" min="1">
+      <input type="text" id="editDate" dir="ltr" placeholder="1404/08/30">
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <input type="text" id="editNote" placeholder="یادداشت">
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <button class="ghost" onclick="closeEdit()">لغو</button>
+      <button class="green" onclick="saveEdit()">ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال آمار -->
+<div class="modal-bg" id="statsModal">
+  <div class="modal">
+    <h3>📈 آمار پیشرفته</h3>
+    <div id="advancedStats"></div>
+    <div class="row" style="margin-top:14px;">
+      <button class="ghost" onclick="document.getElementById('statsModal').classList.remove('show')">بستن</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   تاریخ شمسی (jalaali-js)
+   ========================================================= */
+const Jalaali = (function(){
+  const breaks=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+  function div(a,b){return ~~(a/b);} function mod(a,b){return a-~~(a/b)*b;}
+  function jalCal(jy,withoutLeap){
+    const bl=breaks.length, gy=jy+621;
+    let leapJ=-14, jp=breaks[0], jm, jump, leap, n, i;
+    if(jy<jp||jy>=breaks[bl-1]) throw new Error('Invalid');
+    for(i=1;i<bl;i++){ jm=breaks[i]; jump=jm-jp; if(jy<jm) break;
+      leapJ=leapJ+div(jump,33)*8+div(mod(jump,33),4); jp=jm; }
+    n=jy-jp; leapJ=leapJ+div(n,33)*8+div(mod(n,33)+3,4);
+    if(mod(jump,33)===4&&jump-n===4) leapJ+=1;
+    const leapG=div(gy,4)-div((div(gy,100)+1)*3,4)-150;
+    const march=20+leapJ-leapG;
+    if(!withoutLeap){ if(jump-n<6) n=n-jump+div(jump+4,33)*33;
+      leap=mod(mod(n+1,33)-1,4); if(leap===-1) leap=4; }
+    return {leap,gy,march};
+  }
+  function j2d(jy,jm,jd){ const r=jalCal(jy,true); return g2d(r.gy,3,r.march)+(jm-1)*31-div(jm,7)*(jm-7)+jd-1; }
+  function d2j(jdn){
+    let gy=d2g(jdn).gy, jy=gy-621; const r=jalCal(jy,false);
+    let jdn1f=g2d(gy,3,r.march), jd, jm, k; k=jdn-jdn1f;
+    if(k>=0){ if(k<=185){ jm=1+div(k,31); jd=mod(k,31)+1; return {jy,jm,jd}; } k-=186; }
+    else { jy-=1; k+=179; if(r.leap===1) k+=1; }
+    jm=7+div(k,30); jd=mod(k,30)+1; return {jy,jm,jd};
+  }
+  function g2d(gy,gm,gd){
+    let d=div((gy+div(gm-8,6)+100100)*1461,4)+div(153*mod(gm+9,12)+2,5)+gd-34840408;
+    d=d-div(div(gy+100100+div(gm-8,6),100)*3,4)+752; return d;
+  }
+  function d2g(jdn){
+    let j=4*jdn+139361631; j=j+div(div(4*jdn+183187720,146097)*3,4)*4-3908;
+    const i=div(mod(j,1461),4)*5+308; const gd=div(mod(i,153),5)+1;
+    const gm=mod(div(i,153),12)+1; const gy=div(j,1461)-100100+div(8-gm,6);
+    return {gy,gm,gd};
+  }
+  return {
+    toJalaali(gy,gm,gd){ if(typeof gy==='object'){const d=gy;gy=d.getFullYear();gm=d.getMonth()+1;gd=d.getDate();} return d2j(g2d(gy,gm,gd)); },
+    toGregorian(jy,jm,jd){ return d2g(j2d(jy,jm,jd)); },
+    jalaaliMonthLength(jy,jm){ if(jm<=6) return 31; if(jm<=11) return 30; return jalCal(jy,true).leap===1?30:29; },
+    isValidJalaaliDate(jy,jm,jd){ return jy>=-61&&jy<=3177&&jm>=1&&jm<=12&&jd>=1&&jd<=this.jalaaliMonthLength(jy,jm); }
+  };
+})();
+
+function pad(n){return String(n).padStart(2,'0');}
+function todayJ(){ return Jalaali.toJalaali(new Date()); }
+function jKey(j){ return j.jy+'/'+pad(j.jm)+'/'+pad(j.jd); }
+function todayKey(){ return jKey(todayJ()); }
+function parseJalali(str){
+  const m=String(str).trim().match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if(!m) return null;
+  const jy=+m[1], jm=+m[2], jd=+m[3];
+  if(!Jalaali.isValidJalaaliDate(jy,jm,jd)) return null;
+  return {jy,jm,jd,key:jy+'/'+pad(jm)+'/'+pad(jd)};
+}
+function jKeyToDate(key){
+  const [jy,jm,jd]=key.split('/').map(Number);
+  const g=Jalaali.toGregorian(jy,jm,jd);
+  return new Date(g.gy,g.gm-1,g.gd);
+}
+function dateToJKey(d){ return jKey(Jalaali.toJalaali(d)); }
+function jAddDays(key,n){ const d=jKeyToDate(key); d.setDate(d.getDate()+n); return dateToJKey(d); }
+function jDow(key){ const d=jKeyToDate(key); return (d.getDay()+1)%7; }
+function jalaliDiff(a,b){ return Math.round((jKeyToDate(a)-jKeyToDate(b))/86400000); }
+
+/* =========================================================
+   ذخیره‌سازی
+   ========================================================= */
+const K_SESS='study_sessions_v4', K_DAY='study_dailygoal_v4', K_WEEK='study_weekgoal_v4',
+      K_SUBJ='study_subjects_v4', K_THEME='study_theme_v4', K_FS='study_fs_v4';
+
+let sessions = JSON.parse(localStorage.getItem(K_SESS)||'[]');
+let dayGoal = parseInt(localStorage.getItem(K_DAY)||'120');
+let weekGoal = parseInt(localStorage.getItem(K_WEEK)||'840');
+let subjects = JSON.parse(localStorage.getItem(K_SUBJ)||'["ریاضی","فیزیک","شیمی","ادبیات","زبان"]');
+
+sessions = sessions.map(s=>{
+  if(!s.jalali){
+    if(s.date){ try{ s.jalali=dateToJKey(new Date(s.date)); }catch(e){ s.jalali=todayKey(); } }
+    else s.jalali=todayKey();
+  }
+  return s;
+});
+
+function saveAll(){
+  localStorage.setItem(K_SESS,JSON.stringify(sessions));
+  localStorage.setItem(K_DAY,dayGoal);
+  localStorage.setItem(K_WEEK,weekGoal);
+  localStorage.setItem(K_SUBJ,JSON.stringify(subjects));
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escA(s){return esc(s).replace(/"/g,'&quot;');}
+
+/* =========================================================
+   تم و فونت
+   ========================================================= */
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  localStorage.setItem(K_THEME, isLight?'light':'dark');
+  document.getElementById('themeBtn').textContent = isLight?'☀️':'🌙';
+  drawChart();
+}
+const FONT_SIZES = ['13px','14px','15px','16px','17px'];
+function changeFontSize(){
+  const cur = localStorage.getItem(K_FS)||'14px';
+  const idx = (FONT_SIZES.indexOf(cur)+1) % FONT_SIZES.length;
+  const next = FONT_SIZES[idx];
+  document.documentElement.style.setProperty('--fs', next);
+  localStorage.setItem(K_FS, next);
+}
+(function initPrefs(){
+  if(localStorage.getItem(K_THEME)==='light'){
+    document.body.classList.add('light');
+    document.getElementById('themeBtn').textContent='☀️';
+  }
+  const fs = localStorage.getItem(K_FS);
+  if(fs) document.documentElement.style.setProperty('--fs', fs);
+})();
+
+/* =========================================================
+   دروس
+   ========================================================= */
+function addSubject(){
+  const v=document.getElementById('newSubject').value.trim();
+  if(!v) return;
+  if(subjects.includes(v)){ alert('قبلاً اضافه شده'); return; }
+  subjects.push(v); document.getElementById('newSubject').value='';
+  saveAll(); renderSubjects(); renderSubjectSelects(); render();
+}
+function removeSubject(name){
+  if(!confirm(`درس «${name}» حذف بشه؟`)) return;
+  subjects=subjects.filter(s=>s!==name);
+  saveAll(); renderSubjects(); renderSubjectSelects(); render();
+}
+function renderSubjects(){
+  const box=document.getElementById('subjectList');
+  box.innerHTML = subjects.length?'':'<div class="goal-text">درسی نیست.</div>';
+  subjects.forEach(s=>{
+    const chip=document.createElement('span'); chip.className='subject-chip';
+    chip.innerHTML = `${esc(s)} <span class="x" onclick="removeSubject('${escA(s)}')">×</span>`;
+    box.appendChild(chip);
+  });
+}
+function renderSubjectSelects(){
+  const opts=subjects.map(s=>`<option value="${escA(s)}">${esc(s)}</option>`).join('');
+  document.getElementById('subject').innerHTML='<option value="">انتخاب درس</option>'+opts;
+  document.getElementById('pomoSubject').innerHTML=opts;
+  document.getElementById('filterSubject').innerHTML='<option value="">همه دروس</option>'+opts;
+  document.getElementById('editSubject').innerHTML=opts;
+}
+
+/* =========================================================
+   ثبت / ویرایش / حذف
+   ========================================================= */
+document.getElementById('jalaliDateInput').value = todayKey();
+
+function addSession(){
+  document.getElementById('dateErr').textContent='';
+  const subject=document.getElementById('subject').value||'مطالعه';
+  const minutes=parseInt(document.getElementById('minutes').value);
+  const dateStr=document.getElementById('jalaliDateInput').value.trim();
+  const note=document.getElementById('note').value.trim();
+  if(!minutes||minutes<=0){ alert('مدت معتبر وارد کن'); return; }
+  let key;
+  if(dateStr){ const p=parseJalali(dateStr); if(!p){ document.getElementById('dateErr').textContent='تاریخ نامعتبر. مثال: 1404/08/30'; return; } key=p.key; }
+  else key=todayKey();
+  sessions.push({id:Date.now(),subject,minutes,jalali:key,note});
+  saveAll();
+  document.getElementById('minutes').value='';
+  document.getElementById('note').value='';
+  render();
+}
+
+function deleteSession(id){
+  if(!confirm('حذف بشه؟')) return;
+  sessions=sessions.filter(s=>s.id!==id); saveAll(); render();
+}
+
+let editId=null;
+function editSession(id){
+  const s=sessions.find(x=>x.id===id); if(!s) return;
+  editId=id;
+  document.getElementById('editSubject').value=s.subject;
+  document.getElementById('editMinutes').value=s.minutes;
+  document.getElementById('editDate').value=s.jalali;
+  document.getElementById('editNote').value=s.note||'';
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
+function saveEdit(){
+  if(!editId) return;
+  const s=sessions.find(x=>x.id===editId); if(!s) return;
+  const subj=document.getElementById('editSubject').value;
+  const min=parseInt(document.getElementById('editMinutes').value);
+  const dt=document.getElementById('editDate').value.trim();
+  const note=document.getElementById('editNote').value.trim();
+  if(!min||min<=0){ alert('مدت معتبر وارد کن'); return; }
+  const p=parseJalali(dt); if(!p){ alert('تاریخ نامعتبر'); return; }
+  s.subject=subj; s.minutes=min; s.jalali=p.key; s.note=note;
+  saveAll(); closeEdit(); render();
+}
+
+/* =========================================================
+   آمار
+   ========================================================= */
+function computeStats(){
+  const today=todayKey();
+  const todayMin=sessions.filter(s=>s.jalali===today).reduce((a,s)=>a+s.minutes,0);
+  const weekAgo=jAddDays(today,-6);
+  const weekMin=sessions.filter(s=>s.jalali>=weekAgo&&s.jalali<=today).reduce((a,s)=>a+s.minutes,0);
+  const totalMin=sessions.reduce((a,s)=>a+s.minutes,0);
+  return {today,todayMin,weekMin,totalMin};
+}
+function computeStreak(){
+  let streak=0; let cur=todayKey();
+  // اگه امروز چیزی نداشته باشه، از دیروز شروع کن
+  const hasToday = sessions.some(s=>s.jalali===cur);
+  if(!hasToday) cur = jAddDays(cur,-1);
+  while(true){
+    if(sessions.some(s=>s.jalali===cur)){ streak++; cur=jAddDays(cur,-1); }
+    else break;
+    if(streak>3650) break;
+  }
+  return streak;
+}
+
+/* =========================================================
+   رندر
+   ========================================================= */
+function render(){
+  const st=computeStats();
+  document.getElementById('statToday').textContent=st.todayMin;
+  document.getElementById('statWeek').textContent=st.weekMin;
+  document.getElementById('statTotal').textContent=st.totalMin;
+  document.getElementById('statSessions').textContent=sessions.length;
+
+  // اهداف
+  document.getElementById('goalInput').value=dayGoal;
+  document.getElementById('weekGoalInput').value=weekGoal;
+  const dpct=Math.min(100,Math.round(st.todayMin/dayGoal*100))||0;
+  document.getElementById('goalBar').style.width=dpct+'%';
+  document.getElementById('goalText').textContent=`${st.todayMin} از ${dayGoal} دقیقه — ${dpct}%`;
+  const wpct=Math.min(100,Math.round(st.weekMin/weekGoal*100))||0;
+  document.getElementById('weekGoalBar').style.width=wpct+'%';
+  document.getElementById('weekGoalText').textContent=`${st.weekMin} از ${weekGoal} دقیقه — ${wpct}%`;
+
+  // استریک
+  const streak=computeStreak();
+  const sb=document.getElementById('streakBox');
+  if(streak>0){ sb.style.display='flex'; document.getElementById('streakNum').textContent=streak; }
+  else sb.style.display='none';
+
+  // جلسات
+  const fS=document.getElementById('filterSubject').value;
+  const fD=document.getElementById('filterDate').value.trim();
+  const q=document.getElementById('searchBox').value.trim().toLowerCase();
+  const sort=document.getElementById('sortBy').value;
+
+  const tbody=document.getElementById('sessionsBody');
+  tbody.innerHTML='';
+  let list=[...sessions]
+    .filter(s=>!fS||s.subject===fS)
+    .filter(s=>!fD||s.jalali.startsWith(fD))
+    .filter(s=>!q||(s.subject+s.note).toLowerCase().includes(q));
+
+  if(sort==='date-desc') list.sort((a,b)=>b.jalali.localeCompare(a.jalali)||b.id-a.id);
+  else if(sort==='date-asc') list.sort((a,b)=>a.jalali.localeCompare(b.jalali)||a.id-b.id);
+  else if(sort==='min-desc') list.sort((a,b)=>b.minutes-a.minutes);
+  else list.sort((a,b)=>a.minutes-b.minutes);
+
+  list.forEach(s=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td dir="ltr" style="text-align:right">${s.jalali}</td>
+      <td>${esc(s.subject)}</td>
+      <td>${s.minutes} د</td>
+      <td>${esc(s.note||'-')}</td>
+      <td style="white-space:nowrap;">
+        <button class="ghost small" onclick="editSession(${s.id})">✏️</button>
+        <button class="danger small" onclick="deleteSession(${s.id})">×</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('emptyMsg').style.display=list.length?'none':'block';
+
+  drawChart();
+  renderCalendar();
+}
+function saveGoals(){
+  const d=parseInt(document.getElementById('goalInput').value);
+  const w=parseInt(document.getElementById('weekGoalInput').value);
+  if(d>0) dayGoal=d;
+  if(w>0) weekGoal=w;
+  saveAll(); render();
+}
+
+/* =========================================================
+   نمودار
+   ========================================================= */
+let chartMode='bar7';
+function setChartMode(m){
+  chartMode=m;
+  ['bar7','bar30','pie'].forEach(x=>document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)).classList.remove('active'));
+  document.getElementById('tab'+(m==='bar7'?'Bar7':m==='bar30'?'Bar30':'Pie')).classList.add('active');
+  drawChart();
+}
+function drawChart(){
+  const cv=document.getElementById('chart');
+  const dpr=window.devicePixelRatio||1;
+  const w=cv.clientWidth, h=cv.clientHeight;
+  cv.width=w*dpr; cv.height=h*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+
+  const css=getComputedStyle(document.body);
+  const accent=css.getPropertyValue('--accent').trim();
+  const accent2=css.getPropertyValue('--accent2').trim();
+  const text=css.getPropertyValue('--text').trim();
+  const muted=css.getPropertyValue('--muted').trim();
+
+  if(chartMode==='pie'){ drawPie(ctx,w,h); return; }
+
+  const days=parseInt(chartMode==='bar7'?7:30);
+  const today=todayKey();
+  const keys=[]; for(let i=days-1;i>=0;i--) keys.push(jAddDays(today,-i));
+  const values=keys.map(k=>sessions.filter(s=>s.jalali===k).reduce((a,s)=>a+s.minutes,0));
+  const max=Math.max(dayGoal,...values,1);
+
+  const padL=8, padR=8, padB=28, padT=14;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const bw=plotW/days;
+  const barW=Math.max(2,Math.min(34,bw*0.7));
+
+  const gy=padT+plotH-(dayGoal/max)*plotH;
+  ctx.strokeStyle=muted; ctx.setLineDash([4,4]); ctx.beginPath();
+  ctx.moveTo(padL,gy); ctx.lineTo(w-padR,gy); ctx.stroke(); ctx.setLineDash([]);
+
+  for(let i=0;i<days;i++){
+    const v=values[i];
+    const x=padL+i*bw+(bw-barW)/2;
+    const bh=(v/max)*plotH;
+    const y=padT+plotH-bh;
+    ctx.fillStyle=(keys[i]===today)?accent2:accent;
+    roundRect(ctx,x,y,barW,bh,3); ctx.fill();
+    // برچسب: برای ۷ روز همه، برای ۳۰ روز فقط هر ۵ تا + آخر
+    if(days===7 || i%5===0 || i===days-1){
+      ctx.fillStyle=muted; ctx.font='9px Tahoma'; ctx.textAlign='center';
+      ctx.fillText(keys[i].split('/').slice(1).join('/'), x+barW/2, h-10);
+    }
+    if(days===7 && v>0){
+      ctx.fillStyle=text; ctx.font='11px Tahoma'; ctx.textAlign='center';
+      ctx.fillText(v, x+barW/2, y-4);
+    }
+  }
+}
+
+function drawPie(ctx,w,h){
+  const byS={};
+  sessions.forEach(s=>{ byS[s.subject]=(byS[s.subject]||0)+s.minutes; });
+  const arr=Object.entries(byS).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  const total=arr.reduce((a,x)=>a+x[1],0);
+  if(!total){ ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--muted'); ctx.font='14px Tahoma'; ctx.textAlign='center'; ctx.fillText('داده‌ای نیست',w/2,h/2); return; }
+
+  const cx=w/2, cy=h/2, r=Math.min(w,h)/2-20;
+  const colors=['#38bdf8','#22c55e','#f59e0b','#ef4444','#a855f7','#ec4899','#14b8a6','#f97316','#84cc16','#06b6d4'];
+  let start=-Math.PI/2;
+  arr.forEach((entry,i)=>{
+    const [name,val]=entry;
+    const angle=(val/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+angle);
+    ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length];
+    ctx.fill();
+    // برچسب درصدی داخل
+    if(angle>0.3){
+      const mid=start+angle/2;
+      const tx=cx+Math.cos(mid)*r*0.65;
+      const ty=cy+Math.sin(mid)*r*0.65;
+      ctx.fillStyle='#000'; ctx.font='bold 11px Tahoma'; ctx.textAlign='center';
+      ctx.fillText(Math.round(val/total*100)+'%',tx,ty);
+    }
+    start+=angle;
+  });
+  // دایره وسط
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.4,0,Math.PI*2);
+  const cardColor=getComputedStyle(document.body).getPropertyValue('--card').trim();
+  ctx.fillStyle=cardColor; ctx.fill();
+  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text').trim();
+  ctx.font='bold 13px Tahoma'; ctx.textAlign='center';
+  ctx.fillText(total+' د', cx, cy+5);
+
+  // راهنما
+  const legendX=w-110;
+  let ly=10;
+  ctx.textAlign='right'; ctx.font='10px Tahoma';
+  arr.slice(0,8).forEach((entry,i)=>{
+    const [name,val]=entry;
+    ctx.fillStyle=colors[i%colors.length];
+    ctx.fillRect(legendX,ly,10,10);
+    ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text').trim();
+    ctx.fillText(name.slice(0,12),legendX-4,ly+9);
+    ly+=14;
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  if(h<r*2) r=h/2; if(w<r*2) r=w/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+/* =========================================================
+   تقویم
+   ========================================================= */
+let calView=(()=>{ const t=todayJ(); return {jy:t.jy,jm:t.jm}; })();
+function calShift(dir){
+  let {jy,jm}=calView; jm+=dir;
+  if(jm<1){ jm=12; jy--; } if(jm>12){ jm=1; jy++; }
+  calView={jy,jm}; renderCalendar();
+}
+const MONTH_NAMES=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const DOW_NAMES=['ش','ی','د','س','چ','پ','ج'];
+
+function renderCalendar(){
+  document.getElementById('calTitle').textContent=`${MONTH_NAMES[calView.jm-1]} ${calView.jy}`;
+  const grid=document.getElementById('calendarGrid'); grid.innerHTML='';
+  DOW_NAMES.forEach(d=>{ const el=document.createElement('div'); el.className='cal-head'; el.textContent=d; grid.appendChild(el); });
+  const len=Jalaali.jalaaliMonthLength(calView.jy,calView.jm);
+  const firstKey=`${calView.jy}/${pad(calView.jm)}/01`;
+  const startDow=jDow(firstKey);
+  for(let i=0;i<startDow;i++){ const el=document.createElement('div'); el.className='cal-day empty-day'; grid.appendChild(el); }
+  const tk=todayKey();
+  for(let d=1;d<=len;d++){
+    const key=`${calView.jy}/${pad(calView.jm)}/${pad(d)}`;
+    const mins=sessions.filter(s=>s.jalali===key).reduce((a,s)=>a+s.minutes,0);
+    const el=document.createElement('div');
+    el.className='cal-day'+(key===tk?' today':'');
+    el.innerHTML=`<div class="num">${d}</div>${mins?`<div class="mins">${mins}د</div>`:''}`;
+    el.onclick=()=>showDay(key);
+    grid.appendChild(el);
+  }
+}
+function showDay(key){
+  const items=sessions.filter(s=>s.jalali===key);
+  const box=document.getElementById('calDetail');
+  if(!items.length){ box.textContent=`${key} — جلسه‌ای نیست.`; return; }
+  const total=items.reduce((a,s)=>a+s.minutes,0);
+  box.textContent=`${key} — ${total} دقیقه: `+items.map(s=>`${s.subject}(${s.minutes}د)`).join(' • ');
+}
+
+/* =========================================================
+   آمار پیشرفته
+   ========================================================= */
+function openStatsModal(){
+  const box=document.getElementById('advancedStats');
+  const today=todayKey();
+  // میانگین ۳۰ روز
+  const last30=[]; for(let i=0;i<30;i++) last30.push(jAddDays(today,-i));
+  const total30=last30.reduce((a,k)=>a+sessions.filter(s=>s.jalali===k).reduce((x,s)=>x+s.minutes,0),0);
+  const avg30=Math.round(total30/30);
+  // بهترین روز هفته
+  const dowMin=[0,0,0,0,0,0,0];
+  sessions.forEach(s=>{ dowMin[jDow(s.jalali)]+=s.minutes; });
+  const bestDowIdx=dowMin.indexOf(Math.max(...dowMin));
+  const dowFull=['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه'];
+  // پرمطالعه‌ترین درس
+  const byS={}; sessions.forEach(s=>{ byS[s.subject]=(byS[s.subject]||0)+s.minutes; });
+  const bestSubj=Object.entries(byS).sort((a,b)=>b[1]-a[1])[0];
+  // بهترین روز (رکورد)
+  const byDay={}; sessions.forEach(s=>{ byDay[s.jalali]=(byDay[s.jalali]||0)+s.minutes; });
+  const bestDay=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
+
+  box.innerHTML = `
+    <div class="stat-row"><span>میانگین ۳۰ روز اخیر</span><b>${avg30} دقیقه</b></div>
+    <div class="stat-row"><span>مجموع ۳۰ روز اخیر</span><b>${total30} دقیقه</b></div>
+    <div class="stat-row"><span>پرمطالعه‌ترین روز هفته</span><b>${dowFull[bestDowIdx]} (${dowMin[bestDowIdx]}د)</b></div>
+    <div class="stat-row"><span>پرمطالعه‌ترین درس</span><b>${bestSubj?bestSubj[0]+' ('+bestSubj[1]+'د)':'—'}</b></div>
+    <div class="stat-row"><span>رکورد روزانه</span><b>${bestDay?bestDay[1]+' دقیقه ('+bestDay[0]+')':'—'}</b></div>
+    <div class="stat-row"><span>تعداد کل جلسات</span><b>${sessions.length}</b></div>
+    <div class="stat-row"><span>روزهای فعال</span><b>${Object.keys(byDay).length}</b></div>
+  `;
+  document.getElementById('statsModal').classList.add('show');
+}
+
+/* =========================================================
+   پومودورو
+   ========================================================= */
+let timerSec=25*60, timerEndAt=null, timerInterval=null, timerRunning=false;
+
+function setPomoDuration(){
+  const m=parseInt(document.getElementById('pomoDuration').value);
+  if(timerRunning){ if(!confirm('تایمر در حال اجراست. ریست بشه؟')) return; resetTimer(); }
+  timerSec=m*60; updateTimerDisplay();
+}
+function fmt(sec){ return pad(Math.floor(sec/60))+':'+pad(sec%60); }
+function updateTimerDisplay(){
+  document.getElementById('timerDisplay').textContent=fmt(timerSec);
+  if(timerRunning){
+    document.title = fmt(timerSec)+' — مطالعه';
+  } else {
+    document.title = 'دفترچه مطالعه من';
+  }
+}
+function toggleTimer(){
+  if(timerRunning){
+    clearInterval(timerInterval); timerRunning=false;
+    document.getElementById('pomoStart').textContent='ادامه';
+    document.title='دفترچه مطالعه من';
+  } else {
+    timerRunning=true;
+    timerEndAt = Date.now() + timerSec*1000;
+    document.getElementById('pomoStart').textContent='توقف';
+    timerInterval=setInterval(()=>{
+      timerSec = Math.max(0, Math.round((timerEndAt-Date.now())/1000));
+      updateTimerDisplay();
+      if(timerSec<=0){ clearInterval(timerInterval); timerRunning=false;
+        document.getElementById('pomoStart').textContent='شروع'; finishPomodoro(); }
+    },250);
+  }
+}
+function resetTimer(){
+  clearInterval(timerInterval); timerRunning=false;
+  const m=parseInt(document.getElementById('pomoDuration').value)||25;
+  timerSec=m*60;
+  document.getElementById('pomoStart').textContent='شروع';
+  updateTimerDisplay();
+}
+function finishPomodoro(){
+  const subject=document.getElementById('pomoSubject').value||'پومودورو';
+  const m=parseInt(document.getElementById('pomoDuration').value)||25;
+  sessions.push({id:Date.now(),subject,minutes:m,jalali:todayKey(),note:'ثبت خودکار تایمر'});
+  saveAll(); render();
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=880; o.type='sine';
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.8);
+    o.start(); o.stop(ctx.currentTime+0.8);
+  }catch(e){}
+  if(Notification.permission==='granted'){
+    new Notification('⏰ پومودورو تموم شد!', {body:`${m} دقیقه ${subject} ثبت شد.`, icon:'icon.png'});
+  } else {
+    alert(`⏰ ${m} دقیقه ${subject} ثبت شد!`);
+  }
+  resetTimer();
+}
+
+/* اعلان مرورگر */
+if('Notification' in window && Notification.permission==='default'){
+  document.getElementById('notifBtn').style.display='block';
+}
+function requestNotif(){
+  if('Notification' in window){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted'){ document.getElementById('notifBtn').style.display='none'; alert('اعلان فعال شد ✅'); }
+    });
+  }
+}
+
+/* =========================================================
+   بکاپ
+   ========================================================= */
+function exportData(){
+  const data={sessions,dayGoal,weekGoal,subjects,version:4};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`study-backup-${todayKey().replace(/\//g,'-')}.json`;
+  a.click();
+}
+function exportCSV(){
+  const rows=[['تاریخ','درس','مدت (دقیقه)','یادداشت']];
+  [...sessions].sort((a,b)=>a.jalali.localeCompare(b.jalali))
+    .forEach(s=>rows.push([s.jalali,s.subject,s.minutes,s.note||'']));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`study-${todayKey().replace(/\//g,'-')}.csv`;
+  a.click();
+}
+function importData(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data.sessions)) throw 0;
+      sessions=data.sessions.map(s=>{
+        if(!s.jalali&&s.date){ try{ s.jalali=dateToJKey(new Date(s.date)); }catch(e){} }
+        if(!s.jalali) s.jalali=todayKey();
+        return s;
+      });
+      if(typeof data.dayGoal==='number') dayGoal=data.dayGoal;
+      if(typeof data.weekGoal==='number') weekGoal=data.weekGoal;
+      if(typeof data.goal==='number') dayGoal=data.goal;
+      if(Array.isArray(data.subjects)) subjects=data.subjects;
+      saveAll(); renderSubjects(); renderSubjectSelects(); render();
+      alert('وارد شد ✅');
+    }catch(err){ alert('فایل معتبر نیست'); }
+  };
+  r.readAsText(f); e.target.value='';
+}
+function clearAll(){
+  if(!confirm('همه جلسات پاک بشن؟')) return;
+  sessions=[]; saveAll(); render();
+}
+
+/* =========================================================
+   رویدادها و راه‌اندازی
+   ========================================================= */
+['filterSubject','sortBy'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+['filterDate','searchBox'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+window.addEventListener('resize', drawChart);
+document.querySelectorAll('.modal-bg').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); });
+});
+
+renderSubjects();
+renderSubjectSelects();
+updateTimerDisplay();
+render();
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// کلید میانبر
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closeEdit(); document.getElementById('statsModal').classList.remove('show'); }
+});
+</script>
+</body>
+</html>
